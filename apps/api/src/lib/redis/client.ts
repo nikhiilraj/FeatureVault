@@ -1,4 +1,4 @@
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { env } from '../env.js'
 
 export const redisClient = new Redis(env.REDIS_URL, {
@@ -11,8 +11,8 @@ export const redisSub = new Redis(env.REDIS_URL, {
   lazyConnect: true,
 })
 
-redisClient.on('error', (err) => console.error('[Redis]', err.message))
-redisSub.on('error',    (err) => console.error('[Redis Sub]', err.message))
+redisClient.on('error', (err: Error) => console.error('[Redis]', err.message))
+redisSub.on('error',    (err: Error) => console.error('[Redis Sub]', err.message))
 
 export const REDIS_KEYS = {
   flagCache:       (projectId: string) => `fv:flags:${projectId}`,

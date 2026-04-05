@@ -12,18 +12,16 @@ const app = Fastify({
 })
 
 // ─── Plugins ────────────────────────────────────────────────
-import helmet     from '@fastify/helmet'
-import cors       from '@fastify/cors'
-import cookie     from '@fastify/cookie'
-import rateLimit  from '@fastify/rate-limit'
-import websocket  from '@fastify/websocket'
+import helmet    from '@fastify/helmet'
+import cors      from '@fastify/cors'
+import cookie    from '@fastify/cookie'
+import rateLimit from '@fastify/rate-limit'
+import websocket from '@fastify/websocket'
+import jwtPlugin from './plugins/jwt.js'
 import { redisClient } from './lib/redis/client.js'
 
 await app.register(helmet, { contentSecurityPolicy: false })
-await app.register(cors, {
-  origin: env.CORS_ORIGIN,
-  credentials: true,
-})
+await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true })
 await app.register(cookie, { secret: env.COOKIE_SECRET })
 await app.register(rateLimit, {
   redis: redisClient,
@@ -32,13 +30,20 @@ await app.register(rateLimit, {
   keyGenerator: (req) => req.headers['authorization'] ?? req.ip,
 })
 await app.register(websocket)
+await app.register(jwtPlugin)
 
-// ─── Health check ────────────────────────────────────────────
+// ─── Routes ─────────────────────────────────────────────────
+import { authRoutes }      from './modules/auth/auth.routes.js'
+import { workspaceRoutes } from './modules/workspace/workspace.routes.js'
+
 app.get('/health', async () => ({
-  status: 'ok',
+  status:    'ok',
   timestamp: new Date().toISOString(),
-  version: process.env.npm_package_version ?? '0.1.0',
+  version:   process.env.npm_package_version ?? '0.1.0',
 }))
+
+await app.register(authRoutes,      { prefix: '/v1/auth' })
+await app.register(workspaceRoutes, { prefix: '/v1/workspaces' })
 
 // ─── Graceful shutdown ───────────────────────────────────────
 const shutdown = async (signal: string) => {
