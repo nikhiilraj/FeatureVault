@@ -1,0 +1,23 @@
+{
+  "name": "@featurevault/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev":       "next dev -p 3000",
+    "build":     "next build",
+    "start":     "next start",
+    "lint":      "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@featurevault/shared": "workspace:*",
+    "next":     "15.0.0",
+    "react":    "^18.3.1",
+    "react-dom":"^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node":  "^20.14.0",
+    "@types/react": "^18.3.3",
+    "typescript":   "^5.4.0"
+  }
+}

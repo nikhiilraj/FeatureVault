@@ -1,0 +1,28 @@
+{
+  "name": "featurevault",
+  "private": true,
+  "scripts": {
+    "dev:api": "pnpm --filter @featurevault/api dev",
+    "dev:web": "pnpm --filter @featurevault/web dev",
+    "dev:worker": "pnpm --filter @featurevault/api worker",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @featurevault/api db:migrate",
+    "db:studio": "pnpm --filter @featurevault/api db:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "esbuild",
+      "sharp",
+      "msgpackr-extract",
+      "@img/sharp-libvips-darwin-arm64",
+      "es5-ext"
+    ]
+  }
+}
