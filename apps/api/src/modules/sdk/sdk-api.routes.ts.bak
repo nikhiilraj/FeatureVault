@@ -1,0 +1,84 @@
+import type { FastifyInstance } from 'fastify'
+import { flagsService } from '../flags/flags.service.js'
+import { authenticateSDKKey } from '../../middleware/sdk-auth.js'
+import { redisSub, redisClient, REDIS_KEYS } from '../../lib/redis/client.js'
+
+// Track WebSocket connections per project: projectId → Set<WebSocket>
+const wsConnections = new Map<string, Set<any>>()
+
+// Subscribe to Redis pubsub on startup and fan out to WS clients
+async function setupPubSubListener() {
+  await redisSub.psubscribe('fv:pubsub:flags:*')
+  redisSub.on('pmessage', (_pattern: string, channel: string, message: string) => {
+    const projectId = channel.replace('fv:pubsub:flags:', '')
+    const connections = wsConnections.get(projectId)
+    if (!connections || connections.size === 0) return
+
+    connections.forEach((ws) => {
+      try {
+        if (ws.readyState === 1) { // OPEN
+          ws.send(message)
+        }
+      } catch {
+        connections.delete(ws)
+      }
+    })
+  })
+}
+
+setupPubSubListener().catch(console.error)
+
+export async function sdkApiRoutes(app: FastifyInstance) {
+
+  // GET /sdk/v1/flags — returns full flag config for a project
+  app.get('/flags', { preHandler: authenticateSDKKey }, async (request, reply) => {
+    const { projectId } = request.sdkContext
+    const config = await flagsService.getSDKConfig(projectId)
+    return reply.status(200).send({
+      success:   true,
+      projectId,
+      flags:     config,
+      fetchedAt: new Date().toISOString(),
+    })
+  })
+
+  // WS /sdk/v1/ws — WebSocket for real-time flag updates
+  app.get('/ws', { websocket: true, preHandler: authenticateSDKKey }, (socket, request) => {
+    const { projectId } = request.sdkContext
+
+    // Register connection
+    if (!wsConnections.has(projectId)) {
+      wsConnections.set(projectId, new Set())
+    }
+    wsConnections.get(projectId)!.add(socket)
+
+    app.log.info(`[WS] SDK connected to project ${projectId} (total: ${wsConnections.get(projectId)!.size})`)
+
+    // Send initial connected message
+    socket.send(JSON.stringify({
+      type:       'connected',
+      projectId,
+      serverTime: new Date().toISOString(),
+    }))
+
+    // Heartbeat — respond to ping
+    socket.on('message', (rawMsg: Buffer) => {
+      try {
+        const msg = JSON.parse(rawMsg.toString())
+        if (msg.type === 'ping') {
+          socket.send(JSON.stringify({ type: 'pong', serverTime: new Date().toISOString() }))
+        }
+      } catch { /* ignore malformed messages */ }
+    })
+
+    // Cleanup on disconnect
+    socket.on('close', () => {
+      wsConnections.get(projectId)?.delete(socket)
+      app.log.info(`[WS] SDK disconnected from project ${projectId}`)
+    })
+
+    socket.on('error', () => {
+      wsConnections.get(projectId)?.delete(socket)
+    })
+  })
+}

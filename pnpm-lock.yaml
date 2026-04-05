@@ -50,6 +50,9 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.10.1
+      murmurhash:
+        specifier: ^2.0.1
+        version: 2.0.1
       nodemailer:
         specifier: ^6.10.1
         version: 6.10.1
@@ -66,6 +69,9 @@ importers:
         specifier: ^3.23.4
         version: 3.25.76
     devDependencies:
+      '@types/murmurhash':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.39
@@ -1076,6 +1082,10 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/murmurhash@2.0.0':
+    resolution: {integrity: sha512-AYKjtkyGM6Stia77QpgOwmxJs4cPhFr2/pjufU7aiOkhd81tfBcPyW35gT2OpBLJiZePoJc4dsQ1pYFaUt26xQ==}
+    deprecated: This is a stub types definition. murmurhash provides its own type definitions, so you do not need this installed.
+
   '@types/node@20.19.39':
     resolution: {integrity: sha512-orrrD74MBUyK8jOAD/r0+lfa1I2MO6I+vAkmAWzMYbCcgrN4lCrmK52gRFQq/JRxfYPfonkr4b0jcY7Olqdqbw==}
 
@@ -1658,6 +1668,9 @@ packages:
 
   msgpackr@1.11.5:
     resolution: {integrity: sha512-UjkUHN0yqp9RWKy0Lplhh+wlpdt9oQBYgULZOiFhV3VclSF1JnSQWZ5r9gORQlNYaUKQoR8itv7g7z1xDDuACA==}
+
+  murmurhash@2.0.1:
+    resolution: {integrity: sha512-5vQEh3y+DG/lMPM0mCGPDnyV8chYg/g7rl6v3Gd8WMF9S429ox3Xk8qrk174kWhG767KQMqqxLD1WnGd77hiew==}
 
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
@@ -2734,6 +2747,10 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/murmurhash@2.0.0':
+    dependencies:
+      murmurhash: 2.0.1
+
   '@types/node@20.19.39':
     dependencies:
       undici-types: 6.21.0
@@ -3420,6 +3437,8 @@ snapshots:
   msgpackr@1.11.5:
     optionalDependencies:
       msgpackr-extract: 3.0.3
+
+  murmurhash@2.0.1: {}
 
   nanoid@3.3.11: {}
 

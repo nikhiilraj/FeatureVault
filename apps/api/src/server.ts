@@ -11,7 +11,6 @@ const app = Fastify({
   genReqId: () => crypto.randomUUID(),
 })
 
-// ─── Plugins ────────────────────────────────────────────────
 import helmet    from '@fastify/helmet'
 import cors      from '@fastify/cors'
 import cookie    from '@fastify/cookie'
@@ -21,7 +20,7 @@ import jwtPlugin from './plugins/jwt.js'
 import { redisClient } from './lib/redis/client.js'
 
 await app.register(helmet, { contentSecurityPolicy: false })
-await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true })
+await app.register(cors,   { origin: env.CORS_ORIGIN, credentials: true })
 await app.register(cookie, { secret: env.COOKIE_SECRET })
 await app.register(rateLimit, {
   redis: redisClient,
@@ -35,6 +34,10 @@ await app.register(jwtPlugin)
 // ─── Routes ─────────────────────────────────────────────────
 import { authRoutes }      from './modules/auth/auth.routes.js'
 import { workspaceRoutes } from './modules/workspace/workspace.routes.js'
+import { flagRoutes }      from './modules/flags/flags.routes.js'
+import { sdkKeyRoutes }    from './modules/sdk/sdk-keys.routes.js'
+import { sdkApiRoutes }    from './modules/sdk/sdk-api.routes.js'
+import { auditRoutes }     from './modules/audit/audit.routes.js'
 
 app.get('/health', async () => ({
   status:    'ok',
@@ -44,8 +47,17 @@ app.get('/health', async () => ({
 
 await app.register(authRoutes,      { prefix: '/v1/auth' })
 await app.register(workspaceRoutes, { prefix: '/v1/workspaces' })
+await app.register(auditRoutes,     { prefix: '/v1/workspaces/me/audit-logs' })
 
-// ─── Graceful shutdown ───────────────────────────────────────
+// Project-scoped routes — flags and SDK keys
+await app.register(async (instance) => {
+  await instance.register(flagRoutes,   { prefix: '/:projectId/flags' })
+  await instance.register(sdkKeyRoutes, { prefix: '/:projectId/sdk-keys' })
+}, { prefix: '/v1/projects' })
+
+// SDK routes — different auth mechanism (API key, not JWT)
+await app.register(sdkApiRoutes, { prefix: '/sdk/v1' })
+
 const shutdown = async (signal: string) => {
   app.log.info(`Received ${signal}, shutting down...`)
   await app.close()
@@ -54,7 +66,6 @@ const shutdown = async (signal: string) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT',  () => shutdown('SIGINT'))
 
-// ─── Start ───────────────────────────────────────────────────
 try {
   await app.listen({ port: env.API_PORT, host: '0.0.0.0' })
 } catch (err) {
