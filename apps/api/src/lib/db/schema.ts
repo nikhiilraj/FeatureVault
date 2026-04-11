@@ -259,3 +259,51 @@ export const experimentsRelations = relations(experiments, ({ one, many }) => ({
   project:  one(projects, { fields: [experiments.projectId], references: [projects.id] }),
   variants: many(experimentVariants),
 }))
+
+// ─── Experiment Analytics (Phase 5) ─────────────────────────
+export const experimentImpressions = pgTable('experiment_impressions', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  experimentId: uuid('experiment_id').notNull(),
+  variantId:    uuid('variant_id').notNull(),
+  userId:       varchar('user_id', { length: 255 }).notNull(),
+  sessionId:    varchar('session_id', { length: 255 }),
+  createdAt:    timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  experimentVariantIdx: index('idx_imp_experiment_variant').on(t.experimentId, t.variantId),
+  userIdx:              index('idx_imp_user_id').on(t.userId),
+}))
+
+export const experimentEvents = pgTable('experiment_events', {
+  id:            uuid('id').primaryKey().defaultRandom(),
+  experimentId:  uuid('experiment_id').notNull(),
+  variantId:     uuid('variant_id').notNull(),
+  userId:        varchar('user_id', { length: 255 }).notNull(),
+  eventName:     varchar('event_name', { length: 128 }).notNull(),
+  value:         numeric('value', { precision: 15, scale: 4 }),
+  properties:    jsonb('properties'),
+  createdAt:     timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  experimentEventIdx: index('idx_evt_experiment_event').on(t.experimentId, t.eventName),
+  userIdx:            index('idx_evt_user').on(t.userId),
+}))
+
+export const experimentResults = pgTable('experiment_results', {
+  id:                  uuid('id').primaryKey().defaultRandom(),
+  experimentId:        uuid('experiment_id').notNull(),
+  variantId:           uuid('variant_id').notNull(),
+  metricName:          varchar('metric_name', { length: 128 }).notNull(),
+  impressions:         integer('impressions').notNull().default(0),
+  conversions:         integer('conversions').notNull().default(0),
+  conversionRate:      numeric('conversion_rate', { precision: 8, scale: 6 }).notNull().default('0'),
+  uplift:              numeric('uplift', { precision: 8, scale: 6 }),
+  pValue:              numeric('p_value', { precision: 10, scale: 8 }),
+  isSignificant:       boolean('is_significant').notNull().default(false),
+  sampleMean:          numeric('sample_mean', { precision: 15, scale: 8 }),
+  sampleVariance:      numeric('sample_variance', { precision: 15, scale: 8 }),
+  computedAt:          timestamp('computed_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt:           timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt:           timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  experimentVariantMetricIdx: index('idx_results_exp_variant_metric')
+    .on(t.experimentId, t.variantId, t.metricName),
+}))

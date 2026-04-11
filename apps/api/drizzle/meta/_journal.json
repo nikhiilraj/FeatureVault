@@ -8,6 +8,13 @@
       "when": 1775355648860,
       "tag": "0000_thin_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775760047013,
+      "tag": "0001_breezy_giant_man",
+      "breakpoints": true
     }
   ]
 }
