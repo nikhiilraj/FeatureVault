@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #E1F5EE;
+  --color-brand-100: #9FE1CB;
+  --color-brand-200: #5DCAA5;
+  --color-brand-400: #1D9E75;
+  --color-brand-600: #0F6E56;
+  --color-brand-800: #085041;
+  --color-brand-900: #04342C;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; }
+}
