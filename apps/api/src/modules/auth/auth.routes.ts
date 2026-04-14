@@ -26,15 +26,17 @@ export async function authRoutes(app: FastifyInstance) {
 
   // GET /v1/auth/verify-email?token=...
   app.get('/verify-email', async (request, reply) => {
+    const webUrl = process.env.WEB_URL ?? 'http://localhost:3000'
     const parsed = verifyEmailSchema.safeParse(request.query)
     if (!parsed.success) {
-      return error(reply, 400, 'VALIDATION_ERROR', 'Token is required', 'token')
+      return reply.redirect(`${webUrl}/login?verified=error&reason=missing_token`)
     }
     try {
-      const result = await authService.verifyEmail(parsed.data.token)
-      return success(reply, result)
+      await authService.verifyEmail(parsed.data.token)
+      return reply.redirect(`${webUrl}/login?verified=true`)
     } catch (err: any) {
-      return error(reply, err.status ?? 400, err.code ?? 'INVALID_TOKEN', err.message)
+      const reason = err.code === 'TOKEN_EXPIRED' ? 'expired' : 'invalid'
+      return reply.redirect(`${webUrl}/login?verified=error&reason=${reason}`)
     }
   })
 
