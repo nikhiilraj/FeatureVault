@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars — it's in .gitignore
+
+aws_region    = "us-east-1"
+project_name  = "featurevault"
+instance_type = "t3.small"
+
+# Your domain (must already be in Route 53)
+domain_name = "featurevault.yourdomain.com"
+
+# Your GitHub repo
+github_repo = "https://github.com/yourusername/featurevault"
+
+# Generate with: ssh-keygen -t ed25519 -f ~/.ssh/featurevault
+# Then paste the contents of ~/.ssh/featurevault.pub here
+ssh_public_key = "ssh-ed25519 AAAA..."
+
+# Restrict this to your IP for security
+# Find your IP: curl https://ipinfo.io/ip
+ssh_allowed_cidrs = ["YOUR_IP/32"]

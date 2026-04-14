@@ -7,15 +7,27 @@ dist
 .next
 out
 
-# Environment
+# Environment — NEVER COMMIT THESE
 .env
 .env.*
 !.env.example
 !.env.production.example
 
-# Keys — NEVER commit private keys
+# Terraform — state and vars contain secrets
+infra/terraform/.terraform/
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfvars
+
+# JWT keys — NEVER COMMIT PRIVATE KEY
 apps/api/keys/private.pem
 apps/api/keys/public.pem
+
+# SSL certs
+infra/certs/
+*.pem
+!apps/api/keys/public.pem  # public key is safe to commit
 
 # Editor
 .vscode
@@ -31,13 +43,10 @@ coverage
 *.tsbuildinfo
 
 # Docker
-*.pem
-certs/
-
-# Logs
 *.log
 
-CLAUDE.md
+# pnpm
+.npmrc
 
-PRD.md
-
+# extra 
+extra.md

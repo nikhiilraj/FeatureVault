@@ -1,15 +1,21 @@
+# FeatureVault — Development
+# Usage: docker compose up -d
+# Dashboard: http://localhost:3000
+# API:       http://localhost:4000
+# Mailpit:   http://localhost:8025
+
 services:
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
+    container_name: fv-postgres-dev
     environment:
-      POSTGRES_USER: featurevault
+      POSTGRES_USER:     featurevault
       POSTGRES_PASSWORD: secret
-      POSTGRES_DB: featurevault
+      POSTGRES_DB:       featurevault
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U featurevault"]
       interval: 5s
@@ -18,25 +24,24 @@ services:
 
   redis:
     image: redis:7-alpine
-    restart: unless-stopped
-    command: redis-server --appendonly yes
+    container_name: fv-redis-dev
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_dev_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  mailhog:
+  mailpit:
     image: axllent/mailpit:latest
-    restart: unless-stopped
+    container_name: fv-mailpit-dev
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_dev_data:
+  redis_dev_data:

@@ -1,28 +1,44 @@
+# FeatureVault — Production
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# All env vars from .env.production (never committed)
+
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: fv-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER:     ${POSTGRES_USER:-featurevault}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       POSTGRES_DB:       ${POSTGRES_DB:-featurevault}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-featurevault}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
+    container_name: fv-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:?required}
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -30,65 +46,85 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: runner
+    container_name: fv-api
     restart: unless-stopped
     environment:
       NODE_ENV:         production
-      DATABASE_URL:     postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_URL:        redis://:${REDIS_PASSWORD}@redis:6379
-      COOKIE_SECRET:    ${COOKIE_SECRET}
-      CORS_ORIGIN:      ${WEB_URL}
-      JWT_ISSUER:       featurevault
-      SMTP_HOST:        ${SMTP_HOST}
-      SMTP_PORT:        ${SMTP_PORT:-587}
-      SMTP_FROM:        ${SMTP_FROM}
       API_PORT:         4000
+      DATABASE_URL:     postgresql://${POSTGRES_USER:-featurevault}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-featurevault}
+      REDIS_URL:        redis://:${REDIS_PASSWORD}@redis:6379
+      COOKIE_SECRET:    ${COOKIE_SECRET:?required}
+      CORS_ORIGIN:      ${WEB_URL:?required}
+      JWT_ISSUER:       featurevault
+      LOG_LEVEL:        info
+      SMTP_HOST:        ${SMTP_HOST:-}
+      SMTP_PORT:        ${SMTP_PORT:-587}
+      SMTP_USER:        ${SMTP_USER:-}
+      SMTP_PASS:        ${SMTP_PASS:-}
+      SMTP_FROM:        ${SMTP_FROM:-noreply@featurevault.app}
+    ports:
+      - "127.0.0.1:4000:4000"  # localhost only — Nginx proxies externally
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 3
+      start_period: 30s
 
   worker:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      target: runner
+    container_name: fv-worker
     restart: unless-stopped
     command: ["node", "apps/api/dist/worker.js"]
     environment:
       NODE_ENV:     production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-featurevault}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-featurevault}
       REDIS_URL:    redis://:${REDIS_PASSWORD}@redis:6379
+      LOG_LEVEL:    info
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
       api:      { condition: service_healthy }
+    networks:
+      - internal
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      target: runner
+    container_name: fv-web
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${API_URL}
-      NEXT_PUBLIC_WS_URL:  ${WS_URL}
+      NODE_ENV:                production
+      NEXT_PUBLIC_API_URL:     ${API_URL:?required}
+      NEXT_PUBLIC_WS_URL:      ${WS_URL:?required}
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "127.0.0.1:3000:3000"  # localhost only — Nginx proxies externally
     depends_on:
       api: { condition: service_healthy }
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - api
-      - web
+networks:
+  internal:
+    driver: bridge
 
 volumes:
   postgres_data:
