@@ -1,0 +1,60 @@
+name: Publish SDK to NPM
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/sdk/src/**'
+      - 'packages/sdk/package.json'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push the package.json version bump
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build SDK
+        working-directory: ./packages/sdk
+        run: pnpm run build
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump Version
+        working-directory: ./packages/sdk
+        # This increments the patch version (e.g. 0.1.0 -> 0.1.1) and automatically creates a git commit and tag
+        run: npm version patch -m "chore(sdk): release version %s [skip ci]"
+
+      - name: Publish to NPM
+        working-directory: ./packages/sdk
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push version bump back to repository
+        run: |
+          git push origin main
+          git push --tags
