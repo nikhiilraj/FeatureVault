@@ -3,9 +3,8 @@ name: Deploy to production
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # allow manual trigger
+  workflow_dispatch:
 
-# Prevent concurrent deploys
 concurrency:
   group: production
   cancel-in-progress: false
@@ -15,7 +14,6 @@ jobs:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: production  # requires approval if configured
 
     steps:
       - name: Checkout
@@ -33,8 +31,7 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          ssh -i ~/.ssh/featurevault.pem -o StrictHostKeyChecking=no \
-            $EC2_USER@$EC2_HOST << 'REMOTE'
+          ssh -i ~/.ssh/featurevault.pem $EC2_USER@$EC2_HOST 'bash -s' << 'REMOTE'
             set -euo pipefail
             cd /home/ec2-user/featurevault
 
@@ -43,19 +40,18 @@ jobs:
             git reset --hard origin/main
 
             echo "🔨 Building containers..."
+            set -a && source .env.production && set +a
             docker compose -f docker-compose.prod.yml build --no-cache api web
-
-            echo "🗃  Running migrations..."
-            source .env.production
-            docker compose -f docker-compose.prod.yml run --rm \
-              -e DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}" \
-              api node apps/api/dist/lib/db/migrate.js
 
             echo "🚀 Restarting services..."
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             echo "⏳ Waiting for health checks..."
-            sleep 15
+            sleep 20
+
+            echo "🗃  Running migrations..."
+            docker compose -f docker-compose.prod.yml exec -T api \
+              sh -c "cd apps/api && node dist/lib/db/migrate.js"
 
             echo "🔍 Health check..."
             curl -sf http://localhost:4000/health || (echo "❌ Health check failed" && exit 1)
@@ -65,15 +61,3 @@ jobs:
 
             echo "✅ Deploy complete at $(date)"
           REMOTE
-
-      - name: Notify success
-        if: success()
-        run: |
-          echo "Deploy succeeded at $(date)"
-          # Add Slack notification here if desired
-
-      - name: Notify failure
-        if: failure()
-        run: |
-          echo "Deploy FAILED at $(date)"
-          # Add Slack notification here if desired

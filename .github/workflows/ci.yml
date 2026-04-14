@@ -59,7 +59,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate JWT keys (CI only)
+      - name: Generate JWT keys
         run: |
           mkdir -p apps/api/keys
           openssl genrsa -out apps/api/keys/private.pem 2048
@@ -68,7 +68,7 @@ jobs:
       - name: Run migrations
         run: |
           cd apps/api
-          DATABASE_URL=$DATABASE_URL pnpm db:migrate
+          pnpm db:migrate
 
       - name: Typecheck — API
         run: cd apps/api && pnpm typecheck
@@ -84,12 +84,3 @@ jobs:
 
       - name: Build SDK
         run: cd packages/sdk && pnpm build
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            apps/api/coverage/
-          retention-days: 7
