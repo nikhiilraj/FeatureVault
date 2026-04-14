@@ -12,6 +12,13 @@ const schema = z.object({
   SMTP_HOST:        z.string().default('localhost'),
   SMTP_PORT:        z.coerce.number().default(1025),
   SMTP_FROM:        z.string().default('noreply@featurevault.dev'),
+
+  // Resend — preferred over SMTP in production
+  RESEND_API_KEY: z.string().optional(),
+
+  // Public URLs for email links
+  WEB_URL: z.string().default('http://localhost:3000'),
+  API_URL: z.string().default('http://localhost:4000'),
 })
 
 const parsed = schema.safeParse(process.env)
