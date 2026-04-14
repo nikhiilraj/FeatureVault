@@ -2,7 +2,8 @@
 
 > Self-hostable feature flags and A/B testing platform with sub-millisecond SDK evaluation.
 
-[![CI](https://github.com/yourusername/featurevault/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/featurevault/actions)
+[![CI](https://github.com/nikhiilraj/FeatureVault/actions/workflows/ci.yml/badge.svg)](https://github.com/nikhiilraj/FeatureVault/actions)
+[![npm](https://img.shields.io/npm/v/featurevault-node)](https://npmjs.com/package/featurevault-node)
 
 ---
 
@@ -49,7 +50,7 @@ REST API reads: < 50ms p95
 
 ```bash
 # 1. Clone
-git clone https://github.com/yourusername/featurevault
+git clone https://github.com/nikhiilraj/FeatureVault
 cd featurevault
 
 # 2. Start infrastructure

@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #E1F5EE;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --color-brand-50:  #E1F5EE;
   --color-brand-100: #9FE1CB;
   --color-brand-200: #5DCAA5;
   --color-brand-400: #1D9E75;
@@ -11,6 +14,69 @@
 }
 
 @layer base {
-  * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; }
+  :root {
+    --color-surface-0:  #ffffff;
+    --color-surface-1:  #fafafa;
+    --color-surface-2:  #f5f5f5;
+    --color-surface-3:  #e5e5e5;
+    --color-surface-4:  #d4d4d4;
+    --color-border:     rgba(0,0,0,0.08);
+    --color-border-md:  rgba(0,0,0,0.12);
+    --color-nav-bg:     rgba(255,255,255,0.85);
+
+    --color-text-1:     #111111;
+    --color-text-2:     #555555;
+    --color-text-3:     #707070;
+    --color-text-4:     #888888;
+  }
+
+  .dark {
+    --color-surface-0:  #0a0a0a;
+    --color-surface-1:  #111111;
+    --color-surface-2:  #1a1a1a;
+    --color-surface-3:  #242424;
+    --color-surface-4:  #2e2e2e;
+    --color-border:     rgba(255,255,255,0.08);
+    --color-border-md:  rgba(255,255,255,0.12);
+    --color-nav-bg:     rgba(10,10,10,0.85);
+    
+    --color-text-1:     #f0f0f0;
+    --color-text-2:     #a0a0a0;
+    --color-text-3:     #707070;
+    --color-text-4:     #505050;
+  }
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-surface-0);
+    color: var(--color-text-1);
+    margin: 0;
+  }
+
+  ::selection {
+    background: var(--color-brand-400);
+    color: #fff;
+  }
+
+  /* Noise grain overlay — breaks digital flatness */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+  }
 }

@@ -41,7 +41,7 @@ export default function SignupPage() {
   return (
     <Card>
       <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Create account</h2>
+        <h2 className="text-lg font-semibold text-black mb-6">Create account</h2>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Input label="First name" value={form.firstName}
@@ -57,7 +57,7 @@ export default function SignupPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" loading={loading} className="w-full">Create account</Button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-4 text-center text-sm text-black">
           Already have an account?{' '}
           <Link href="/login" className="text-brand-600 hover:text-brand-800 font-medium">Sign in</Link>
         </p>

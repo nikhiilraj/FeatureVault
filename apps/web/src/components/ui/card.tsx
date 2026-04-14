@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={clsx('rounded-xl border border-gray-200 bg-white shadow-sm', className)}>
+    <div className={clsx('rounded-xl border border-gray-200 bg-white text-black shadow-sm', className)}>
       {children}
     </div>
   )

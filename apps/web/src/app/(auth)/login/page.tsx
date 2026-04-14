@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <Card>
       <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Sign in</h2>
+        <h2 className="text-lg font-semibold text-black mb-6">Sign in</h2>
         <form onSubmit={submit} className="space-y-4">
           <Input label="Email" type="email" value={email}
             onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
@@ -40,7 +40,7 @@ export default function LoginPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" loading={loading} className="w-full">Sign in</Button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-4 text-center text-sm text-black">
           No account?{' '}
           <Link href="/signup" className="text-brand-600 hover:text-brand-800 font-medium">Sign up</Link>
         </p>

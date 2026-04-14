@@ -1,39 +1,38 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWSStore } from '@/stores/ws.store'
 import { Sidebar } from '@/components/layout/sidebar'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+import { OnboardingModal } from '@/components/onboarding/onboarding-modal'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuthStore()
   const { setStatus }   = useWSStore()
   const router          = useRouter()
 
-  // Auth guard
-  useEffect(() => {
-    if (!user || !token) router.push('/login')
-  }, [user, token, router])
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
-  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (mounted && (!user || !token)) router.push('/login')
+  }, [user, token, router, mounted])
+
   useEffect(() => {
     if (!token) return
-    // WS connection would be set up here with SDK keys in production
-    // For dashboard, we just show connected status after login
     setStatus('connected')
     return () => setStatus('disconnected')
   }, [token, setStatus])
 
-  if (!user) return null
+  if (!mounted || !user) return null
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-[100dvh] overflow-hidden bg-white">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         {children}
       </div>
+      <OnboardingModal />
     </div>
   )
 }
