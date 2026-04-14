@@ -9,21 +9,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: featurevault
+          POSTGRES_USER:     featurevault
           POSTGRES_PASSWORD: secret
-          POSTGRES_DB: featurevault_test
+          POSTGRES_DB:       featurevault_test
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
-
       redis:
         image: redis:7-alpine
         ports: ["6379:6379"]
@@ -33,27 +31,42 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql://featurevault:secret@localhost:5432/featurevault_test
+      REDIS_URL:    redis://localhost:6379
+      NODE_ENV:     test
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+        with: { version: 9 }
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - run: pnpm typecheck
-        env:
-          DATABASE_URL: postgresql://featurevault:secret@localhost:5432/featurevault_test
-          REDIS_URL: redis://localhost:6379
+      - name: Approve native builds
+        run: pnpm rebuild argon2 || true
 
-      - run: pnpm test
-        env:
-          DATABASE_URL: postgresql://featurevault:secret@localhost:5432/featurevault_test
-          REDIS_URL: redis://localhost:6379
-          NODE_ENV: test
+      - name: Run migrations
+        run: cd apps/api && pnpm db:migrate
+
+      - name: TypeScript check — API
+        run: cd apps/api && pnpm typecheck
+
+      - name: TypeScript check — Web
+        run: cd apps/web && pnpm typecheck
+
+      - name: TypeScript check — SDK
+        run: cd packages/sdk && pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build SDK
+        run: cd packages/sdk && pnpm build

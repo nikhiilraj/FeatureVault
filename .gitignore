@@ -1,40 +1,38 @@
+# Dependencies
 node_modules
+.pnpm-store
+
+# Build outputs
 dist
 .next
-.turbo
-*.local
+out
+
+# Environment
 .env
 .env.*
 !.env.example
+!.env.production.example
+
+# Keys — NEVER commit private keys
+apps/api/keys/private.pem
+apps/api/keys/public.pem
+
+# Editor
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
 coverage
 *.tsbuildinfo
 
-# AI and Editor/IDE Files
-.cursor/
-.cursorignore
-.cursorrules
-.cursorworkspace
-.aider*
-.cline/
-.cline_history/
-.roo/
-.copilot/
-.cody/
-.continue/
-.gemini/
-.idea/
-.vscode/
-*.swp
-*.swo
+# Docker
+*.pem
+certs/
 
-# OS Data
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-Architecture.md
-PRD.md
-CLAUDE.md
+# Logs
+*.log

@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+*.local
+.env
+.env.*
+!.env.example
+coverage
+*.tsbuildinfo
+.git
+.github
+*.md
+apps/web/.next
+packages/sdk/dist
