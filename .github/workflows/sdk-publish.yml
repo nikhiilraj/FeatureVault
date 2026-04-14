@@ -46,7 +46,8 @@ jobs:
       - name: Bump Version
         working-directory: ./packages/sdk
         # This increments the patch version (e.g. 0.1.0 -> 0.1.1) and automatically creates a git commit and tag
-        run: npm version patch -m "chore(sdk): release version %s [skip ci]"
+        run: |
+          npm version patch -m "chore(sdk): release version %s [skip ci]"
 
       - name: Publish to NPM
         working-directory: ./packages/sdk
