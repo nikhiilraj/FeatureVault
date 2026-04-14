@@ -65,11 +65,6 @@ jobs:
           openssl genrsa -out apps/api/keys/private.pem 2048
           openssl rsa -in apps/api/keys/private.pem -pubout -out apps/api/keys/public.pem
 
-      - name: Run migrations
-        run: |
-          cd apps/api
-          pnpm db:migrate
-
       - name: Typecheck — API
         run: cd apps/api && pnpm typecheck
 
