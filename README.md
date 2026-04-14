@@ -53,31 +53,22 @@ REST API reads: < 50ms p95
 git clone https://github.com/nikhiilraj/FeatureVault
 cd featurevault
 
-# 2. Start infrastructure
 docker compose up -d
 
-# 3. Install dependencies
 pnpm install
 
-# 4. Generate JWT keys
 mkdir -p apps/api/keys
 openssl genrsa -out apps/api/keys/private.pem 2048
 openssl rsa -in apps/api/keys/private.pem -pubout -out apps/api/keys/public.pem
 
-# 5. Configure environment
 cp .env.example .env
 
-# 6. Run migrations
 pnpm db:migrate
 
-# 7. Start API
 DATABASE_URL=postgresql://featurevault:secret@localhost:5433/featurevault \
 REDIS_URL=redis://localhost:6379 pnpm dev:api
 
-# 8. Start dashboard (new terminal)
 cd apps/web && pnpm dev
-
-# Open http://localhost:3000 and sign up
 ```
 
 ---
@@ -96,21 +87,16 @@ const vault = new FeatureVault({
   apiUrl: 'https://your-featurevault-instance.com',
 })
 
-await vault.connect()  // fetches flags, opens WebSocket
+await vault.connect()
 
-// Boolean flag — sub-millisecond, no network call
 if (vault.isEnabled('new-checkout-flow', { userId: user.id, plan: user.plan })) {
   return renderNewCheckout()
 }
 
-// String flag with default
 const buttonColor = vault.getStringFlag('button-color', { userId }, 'blue')
 
-// A/B experiment variant assignment (deterministic)
 const variant = vault.getVariant('checkout-experiment', { userId: user.id })
-// variant === 'control' | 'treatment' | null
 
-// Track conversion event
 vault.track('purchase_completed', {
   userId:        user.id,
   experimentKey: 'checkout-experiment',
@@ -227,9 +213,7 @@ featurevault/
 ## Self-hosting with Docker Compose
 
 ```bash
-# Production deployment
 cp .env.production.example .env.production
-# Edit .env.production with your values
 
 docker compose -f docker-compose.prod.yml up -d
 ```
