@@ -3,10 +3,7 @@ import { env } from './lib/env.js'
 
 const app = Fastify({
   logger: {
-    level: env.LOG_LEVEL,
-    transport: env.NODE_ENV === 'development'
-      ? { target: 'pino-pretty', options: { colorize: true } }
-      : undefined,
+    level: env.LOG_LEVEL ?? 'info',
   },
   genReqId: () => crypto.randomUUID(),
 })

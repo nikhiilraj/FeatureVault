@@ -9,9 +9,11 @@ import { welchTTest } from './lib/stats/welch.js'
 import { assignVariant } from './lib/stats/variant-assign.js'
 import { env } from './lib/env.js'
 
+const redisUrl = new URL(env.REDIS_URL)
 const connection = {
-  host: new URL(env.REDIS_URL).hostname,
-  port: Number(new URL(env.REDIS_URL).port) || 6379,
+  host:     redisUrl.hostname,
+  port:     Number(redisUrl.port) || 6379,
+  password: redisUrl.password || undefined,
 }
 
 console.log('🔧  FeatureVault worker starting...')
