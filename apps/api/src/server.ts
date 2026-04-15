@@ -19,7 +19,7 @@ import metricsPlugin from './plugins/metrics.js'
 import { register as promRegister, pgPoolActiveConnections, pgPoolIdleConnections, pgPoolWaitingCount, bullmqJobsWaiting, bullmqJobsActive, bullmqJobsFailed } from './lib/metrics.js'
 import { redisClient } from './lib/redis/client.js'
 import { pool } from './lib/db/client.js'
-import { eventsQueue } from './lib/queue/queues.js'
+import { eventsQueue, aggregationQueue } from './lib/queue/queues.js'
 
 await app.register(helmet, { contentSecurityPolicy: false })
 await app.register(cors,   { origin: env.CORS_ORIGIN, credentials: true })
@@ -94,6 +94,17 @@ setInterval(async () => {
 }, 10_000)
 
 try {
+  // Schedule production hourly significance calculations securely
+  await aggregationQueue.add('hourly-stats', {}, {
+    repeat: { pattern: '0 * * * *' },
+    jobId: 'system-aggregation-cron', // Guarantees cluster-safe uniqueness
+  })
+
+  // development UX: trigger instantly on boot so dashboard numbers calculate natively
+  if (env.NODE_ENV === 'development') {
+    await aggregationQueue.add('dev-instant-compute', {})
+  }
+
   await app.listen({ port: env.API_PORT, host: '0.0.0.0' })
 } catch (err) {
   app.log.error(err)
