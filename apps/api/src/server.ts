@@ -16,8 +16,10 @@ import rateLimit from '@fastify/rate-limit'
 import websocket from '@fastify/websocket'
 import jwtPlugin from './plugins/jwt.js'
 import metricsPlugin from './plugins/metrics.js'
-import { register as promRegister } from './lib/metrics.js'
+import { register as promRegister, pgPoolActiveConnections, pgPoolIdleConnections, pgPoolWaitingCount, bullmqJobsWaiting, bullmqJobsActive, bullmqJobsFailed } from './lib/metrics.js'
 import { redisClient } from './lib/redis/client.js'
+import { pool } from './lib/db/client.js'
+import { eventsQueue } from './lib/queue/queues.js'
 
 await app.register(helmet, { contentSecurityPolicy: false })
 await app.register(cors,   { origin: env.CORS_ORIGIN, credentials: true })
@@ -72,6 +74,24 @@ const shutdown = async (signal: string) => {
 }
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('SIGINT',  () => shutdown('SIGINT'))
+
+// ─── Heavy Infrastructure Telemetry Hook ────────────────────
+setInterval(async () => {
+  // Sync Postgres connection pool status limits
+  pgPoolActiveConnections.set(pool.totalCount - pool.idleCount)
+  pgPoolIdleConnections.set(pool.idleCount)
+  pgPoolWaitingCount.set(pool.waitingCount)
+
+  try {
+    // Sync BullMQ depths securely avoiding Redis blocks
+    const counts = await eventsQueue.getJobCounts('waiting', 'active', 'failed')
+    bullmqJobsWaiting.labels('sdk-events').set(counts.waiting ?? 0)
+    bullmqJobsActive.labels('sdk-events').set(counts.active ?? 0)
+    bullmqJobsFailed.labels('sdk-events').set(counts.failed ?? 0)
+  } catch(e) {
+    // fast fail on network interruptions
+  }
+}, 10_000)
 
 try {
   await app.listen({ port: env.API_PORT, host: '0.0.0.0' })

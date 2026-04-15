@@ -6,6 +6,7 @@ import {
 } from '../../lib/db/schema.js'
 import { hashPassword, verifyPassword } from '../../lib/crypto/password.js'
 import { sha256, generateToken } from '../../lib/crypto/hash.js'
+import { rateLimitExceededTotal } from '../../lib/metrics.js'
 import { redisClient, REDIS_KEYS } from '../../lib/redis/client.js'
 import { emailService } from '../../lib/email/email.service.js'
 import type { SignupInput, LoginInput } from './auth.schemas.js'
@@ -149,6 +150,7 @@ export const authService = {
     const attempts = await redisClient.get(rateLimitKey)
     if (attempts && parseInt(attempts) >= RATE_LIMIT_MAX) {
       const ttl = await redisClient.ttl(rateLimitKey)
+      rateLimitExceededTotal.labels('/auth/login').inc()
       throw Object.assign(
         new Error('Too many login attempts. Please try again later.'),
         { code: 'RATE_LIMITED', status: 429, retryAfter: ttl }

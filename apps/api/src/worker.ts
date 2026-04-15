@@ -10,6 +10,7 @@ import { welchTTest } from './lib/stats/welch.js'
 import { assignVariant } from './lib/stats/variant-assign.js'
 import { env } from './lib/env.js'
 import { trace } from '@opentelemetry/api'
+import { experimentAllocationsTotal } from './lib/metrics.js'
 
 const tracer = trace.getTracer('fv-worker')
 
@@ -60,6 +61,8 @@ const eventsWorker = new Worker('sdk-events', async (job) => {
     const variantKey = assignVariant(event.userId, event.experimentKey, variants)
     const variant    = variants.find(v => v.key === variantKey)
     if (!variant) continue
+
+    experimentAllocationsTotal.labels(exp.id, variant.id).inc()
 
     await db.insert(experimentImpressions).values({
       experimentId: exp.id,

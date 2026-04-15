@@ -64,3 +64,60 @@ export const activeExperiments = new client.Gauge({
   labelNames: ['project_id'],
   registers: [register],
 })
+
+// ─── Phase 1: Database Connections & Queue Depths ─────────────
+
+export const pgPoolActiveConnections = new client.Gauge({
+  name: 'fv_pg_pool_active_connections',
+  help: 'Active connections in the Postgres pool',
+  registers: [register],
+})
+
+export const pgPoolIdleConnections = new client.Gauge({
+  name: 'fv_pg_pool_idle_connections',
+  help: 'Idle connections in the Postgres pool',
+  registers: [register],
+})
+
+export const pgPoolWaitingCount = new client.Gauge({
+  name: 'fv_pg_pool_waiting_queries',
+  help: 'Queries waiting for a Postgres connection',
+  registers: [register],
+})
+
+export const bullmqJobsWaiting = new client.Gauge({
+  name: 'fv_bullmq_jobs_waiting',
+  help: 'Jobs waiting in BullMQ',
+  labelNames: ['queue_name'],
+  registers: [register],
+})
+
+export const bullmqJobsActive = new client.Gauge({
+  name: 'fv_bullmq_jobs_active',
+  help: 'Active jobs in BullMQ',
+  labelNames: ['queue_name'],
+  registers: [register],
+})
+
+export const bullmqJobsFailed = new client.Gauge({
+  name: 'fv_bullmq_jobs_failed',
+  help: 'Failed jobs in BullMQ',
+  labelNames: ['queue_name'],
+  registers: [register],
+})
+
+// ─── Phase 2 & 3: Mathematical Allocations & Security ──────────
+
+export const experimentAllocationsTotal = new client.Counter({
+  name: 'fv_experiment_allocations_total',
+  help: 'Total deterministic mathematical traffic allocations by variant',
+  labelNames: ['experiment_id', 'variant_id'],
+  registers: [register],
+})
+
+export const rateLimitExceededTotal = new client.Counter({
+  name: 'fv_rate_limit_exceeded_total',
+  help: 'Total requests explicitly dropped by Redis sliding-window strict rate limiters',
+  labelNames: ['endpoint'],
+  registers: [register],
+})
