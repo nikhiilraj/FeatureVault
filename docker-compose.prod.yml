@@ -96,6 +96,22 @@ services:
     networks:
       - internal
 
+  agent:
+    image: grafana/agent:v0.40.1
+    container_name: fv-agent
+    command:
+      - "-config.file=/etc/agent/agent.yaml"
+      - "-config.expand-env=true"
+      - "-enable-features=integrations-next"
+    env_file: .env.production
+    volumes:
+      - ./docker/grafana-agent.yaml:/etc/agent/agent.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "4318:4318" # OTLP HTTP receiver
+    networks:
+      - internal
+
 networks:
   internal:
     driver: bridge

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticateSDKKey } from '../../middleware/sdk-auth.js'
 import { eventsQueue } from '../../lib/queue/queues.js'
 import { success, error } from '../../utils/response.js'
+import { eventsQueuedTotal, flagEvaluationsTotal } from '../../lib/metrics.js'
 
 const trackEventSchema = z.object({
   eventName:     z.string().min(1).max(128),
@@ -35,6 +36,20 @@ export async function sdkEventsRoutes(app: FastifyInstance) {
         timestamp: e.timestamp ?? new Date().toISOString(),
       })),
     })
+
+    // Update metrics
+    eventsQueuedTotal.labels('batch', projectId).inc(parsed.data.events.length)
+
+    for (const e of parsed.data.events) {
+      if (e.eventName === 'flag_evaluation' && e.properties?.flagKey) {
+        flagEvaluationsTotal.labels(
+          String(e.properties.flagKey),
+          String(e.properties.result ?? 'unknown'),
+          projectId,
+          request.sdkContext.environment
+        ).inc()
+      }
+    }
 
     return success(reply, { queued: parsed.data.events.length })
   })

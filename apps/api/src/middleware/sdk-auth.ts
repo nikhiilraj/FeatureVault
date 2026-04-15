@@ -3,6 +3,7 @@ import { eq, isNull } from 'drizzle-orm'
 import { db } from '../lib/db/client.js'
 import { sdkKeys, projects } from '../lib/db/schema.js'
 import { sha256 } from '../lib/crypto/hash.js'
+import { sdkKeyAuthFailuresTotal } from '../lib/metrics.js'
 
 export interface SDKKeyContext {
   projectId:   string
@@ -21,6 +22,7 @@ export async function authenticateSDKKey(request: FastifyRequest, reply: Fastify
   const apiKey = request.headers['x-api-key'] as string | undefined
 
   if (!apiKey) {
+    sdkKeyAuthFailuresTotal.labels('missing').inc()
     return reply.status(401).send({
       success: false,
       error: { code: 'MISSING_API_KEY', message: 'X-API-Key header required' },
@@ -43,6 +45,7 @@ export async function authenticateSDKKey(request: FastifyRequest, reply: Fastify
     .limit(1)
 
   if (!keyRecord || keyRecord.revokedAt) {
+    sdkKeyAuthFailuresTotal.labels(keyRecord?.revokedAt ? 'revoked' : 'invalid').inc()
     return reply.status(401).send({
       success: false,
       error: { code: 'INVALID_API_KEY', message: 'Invalid or revoked API key' },

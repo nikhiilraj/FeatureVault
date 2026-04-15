@@ -3,6 +3,7 @@ import { db } from '../../lib/db/client.js'
 import { flags, targetingRules, flagVersions, projects, workspaceMembers } from '../../lib/db/schema.js'
 import { flagCache } from '../../lib/cache/flag-cache.js'
 import { auditService } from '../../lib/audit/audit.service.js'
+import { cacheHitsTotal, cacheMissesTotal } from '../../lib/metrics.js'
 import type {
   CreateFlagInput, UpdateFlagInput,
   UpdateFlagStatusInput, UpsertTargetingRulesInput,
@@ -338,11 +339,14 @@ export const flagsService = {
       .orderBy(sql`${flagVersions.version} DESC`)
   },
 
-  // ─── Get full config for SDK (cached) ─────────────────────
   async getSDKConfig(projectId: string) {
     const cached = await flagCache.get(projectId)
-    if (cached) return cached
+    if (cached) {
+      cacheHitsTotal.labels('redis').inc()
+      return cached
+    }
 
+    cacheMissesTotal.labels('redis').inc()
     const config = await getFlagConfig(projectId)
     await flagCache.set(projectId, config)
     return config

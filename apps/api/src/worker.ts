@@ -1,3 +1,4 @@
+import './lib/opentelemetry.js'
 import { Worker, Queue } from 'bullmq'
 import { eq, and, sql } from 'drizzle-orm'
 import { db } from './lib/db/client.js'
@@ -8,6 +9,9 @@ import {
 import { welchTTest } from './lib/stats/welch.js'
 import { assignVariant } from './lib/stats/variant-assign.js'
 import { env } from './lib/env.js'
+import { trace } from '@opentelemetry/api'
+
+const tracer = trace.getTracer('fv-worker')
 
 const redisUrl = new URL(env.REDIS_URL)
 const connection = {
@@ -116,15 +120,26 @@ const aggregationWorker = new Worker('aggregation', async (_job) => {
 
       let pValue = 1; let uplift = 0; let isSig = false
       if (variant.id !== control.id && ctrlN > 1 && n > 1) {
-        const r = welchTTest(
-          { n: ctrlN, conversions: ctrlConv },
-          { n, conversions: conv },
-          confLevel,
-        )
-        pValue = r.pValue; uplift = r.uplift; isSig = r.isSignificant
+        tracer.startActiveSpan('compute-welch-ttest', (span) => {
+          span.setAttribute('experiment.id', exp.id)
+          span.setAttribute('variant.id', variant.id)
+          try {
+            const r = welchTTest(
+              { n: ctrlN, conversions: ctrlConv },
+              { n, conversions: conv },
+              confLevel,
+            )
+            pValue = r.pValue; uplift = r.uplift; isSig = r.isSignificant
+          } finally {
+            span.end()
+          }
+        })
       }
 
-      await db.insert(experimentResults).values({
+      await tracer.startActiveSpan('upsert-experiment-results', async (span) => {
+        span.setAttribute('experiment.id', exp.id)
+        try {
+          await db.insert(experimentResults).values({
         experimentId:   exp.id,
         variantId:      variant.id,
         metricName:     exp.primaryMetric,
@@ -153,6 +168,10 @@ const aggregationWorker = new Worker('aggregation', async (_job) => {
           updatedAt:      new Date(),
         },
       })
+      } finally {
+        span.end()
+      }
+    })
     }
   }
 }, { connection, concurrency: 1 })

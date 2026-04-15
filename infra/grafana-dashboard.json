@@ -1,0 +1,44 @@
+{
+  "title": "FeatureVault Production Observability",
+  "tags": ["featurevault", "api"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Flag Evaluation Rate (Ops/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(fv_flag_evaluations_total[5m])", "legendFormat": "{{flag_key}} - {{result}}" }
+      ]
+    },
+    {
+      "title": "Redis Cache Hit Ratio",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "sum(rate(fv_flag_cache_hits_total[5m])) / (sum(rate(fv_flag_cache_hits_total[5m])) + sum(rate(fv_flag_cache_misses_total[5m])))", "legendFormat": "Hit %" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1, "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "green", "value": 0.8 }] } }
+      }
+    },
+    {
+      "title": "Active SDK WebSockets",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        { "expr": "sum(fv_ws_connections_active)", "legendFormat": "Connections" }
+      ]
+    },
+    {
+      "title": "API P95 Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(fv_api_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "P95 {{route}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ],
+  "schemaVersion": 38
+}

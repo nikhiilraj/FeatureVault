@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { flagsService } from '../flags/flags.service.js'
 import { authenticateSDKKey } from '../../middleware/sdk-auth.js'
 import { redisSub, REDIS_KEYS } from '../../lib/redis/client.js'
+import { activeWsConnections } from '../../lib/metrics.js'
 
 const wsConnections = new Map<string, Set<any>>()
 
@@ -47,6 +48,9 @@ export async function sdkApiRoutes(app: FastifyInstance) {
 
     if (!wsConnections.has(projectId)) wsConnections.set(projectId, new Set())
     wsConnections.get(projectId)!.add(ws)
+    
+    // Update gauge
+    activeWsConnections.labels(projectId).set(wsConnections.get(projectId)!.size)
 
     app.log.info(`[WS] SDK connected to project ${projectId} (total: ${wsConnections.get(projectId)!.size})`)
 
@@ -67,11 +71,13 @@ export async function sdkApiRoutes(app: FastifyInstance) {
 
     ws.on('close', () => {
       wsConnections.get(projectId)?.delete(ws)
+      activeWsConnections.labels(projectId).set(wsConnections.get(projectId)?.size ?? 0)
       app.log.info(`[WS] SDK disconnected from project ${projectId}`)
     })
 
     ws.on('error', () => {
       wsConnections.get(projectId)?.delete(ws)
+      activeWsConnections.labels(projectId).set(wsConnections.get(projectId)?.size ?? 0)
     })
   })
 }

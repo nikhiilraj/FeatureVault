@@ -1,3 +1,4 @@
+import './lib/opentelemetry.js'
 import Fastify from 'fastify'
 import { env } from './lib/env.js'
 
@@ -14,6 +15,8 @@ import cookie    from '@fastify/cookie'
 import rateLimit from '@fastify/rate-limit'
 import websocket from '@fastify/websocket'
 import jwtPlugin from './plugins/jwt.js'
+import metricsPlugin from './plugins/metrics.js'
+import { register as promRegister } from './lib/metrics.js'
 import { redisClient } from './lib/redis/client.js'
 
 await app.register(helmet, { contentSecurityPolicy: false })
@@ -27,6 +30,7 @@ await app.register(rateLimit, {
 })
 await app.register(websocket)
 await app.register(jwtPlugin)
+await app.register(metricsPlugin)
 
 import { authRoutes }       from './modules/auth/auth.routes.js'
 import { workspaceRoutes }  from './modules/workspace/workspace.routes.js'
@@ -42,6 +46,11 @@ app.get('/health', async () => ({
   timestamp: new Date().toISOString(),
   version:   process.env.npm_package_version ?? '0.1.0',
 }))
+
+app.get('/metrics', async (request, reply) => {
+  reply.header('Content-Type', promRegister.contentType)
+  return promRegister.metrics()
+})
 
 await app.register(authRoutes,      { prefix: '/v1/auth' })
 await app.register(workspaceRoutes, { prefix: '/v1/workspaces' })
