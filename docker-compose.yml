@@ -2,7 +2,6 @@
 # Usage: docker compose up -d
 # Dashboard: http://localhost:3000
 # API:       http://localhost:4000
-# Mailpit:   http://localhost:8025
 
 services:
   postgres:
@@ -35,12 +34,7 @@ services:
       timeout: 5s
       retries: 5
 
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: fv-mailpit-dev
-    ports:
-      - "8025:8025"  # Web UI
-      - "1025:1025"  # SMTP
+
 
 volumes:
   postgres_dev_data:

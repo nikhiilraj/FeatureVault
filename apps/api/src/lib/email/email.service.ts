@@ -19,16 +19,11 @@ function getApiUrl(): string {
   return (env as any).API_URL ?? `http://localhost:${env.API_PORT}`
 }
 
-const FROM = env.SMTP_FROM ?? 'FeatureVault <noreply@featurevault.app>'
+const FROM = env.EMAIL_FROM ?? 'FeatureVault <noreply@featurevault.app>'
 
 export const emailService = {
   async sendVerificationEmail(to: string, token: string): Promise<void> {
     const verifyUrl = `${getApiUrl()}/v1/auth/verify-email?token=${token}`
-
-    if (!(env as any).RESEND_API_KEY) {
-      console.log(`[Email] Verification link for ${to}: ${verifyUrl}`)
-      return
-    }
 
     await getClient().emails.send({
       from:    FROM,
@@ -46,11 +41,6 @@ export const emailService = {
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const resetUrl = `${getBaseUrl()}/reset-password?token=${token}`
-
-    if (!(env as any).RESEND_API_KEY) {
-      console.log(`[Email] Password reset link for ${to}: ${resetUrl}`)
-      return
-    }
 
     await getClient().emails.send({
       from:    FROM,
@@ -73,11 +63,6 @@ export const emailService = {
     token: string,
   ): Promise<void> {
     const acceptUrl = `${getBaseUrl()}/invites/accept?token=${token}`
-
-    if (!(env as any).RESEND_API_KEY) {
-      console.log(`[Email] Invite link for ${to}: ${acceptUrl}`)
-      return
-    }
 
     await getClient().emails.send({
       from:    FROM,

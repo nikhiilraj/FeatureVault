@@ -1,4 +1,12 @@
 import { z } from 'zod'
+import { config } from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+config({ path: path.resolve(__dirname, '../../../../.env') })
 
 const schema = z.object({
   NODE_ENV:         z.enum(['development', 'test', 'production']).default('development'),
@@ -9,12 +17,8 @@ const schema = z.object({
   CORS_ORIGIN:      z.string().default('http://localhost:3000'),
   LOG_LEVEL:        z.enum(['trace','debug','info','warn','error']).default('info'),
   JWT_ISSUER:       z.string().default('featurevault'),
-  SMTP_HOST:        z.string().default('localhost'),
-  SMTP_PORT:        z.coerce.number().default(1025),
-  SMTP_FROM:        z.string().default('noreply@featurevault.dev'),
-
-  // Resend — preferred over SMTP in production
-  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM:       z.string().default('noreply@featurevault.dev'),
+  RESEND_API_KEY:   z.string(),
 
   // Public URLs for email links
   WEB_URL: z.string().default('http://localhost:3000'),
