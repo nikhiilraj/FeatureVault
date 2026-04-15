@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'featurevault-local-api'
+    metrics_path: '/metrics'
+    static_configs:
+      # host.docker.internal resolves to the local host machine on Mac/Windows
+      # so it cleanly reaches your local `pnpm dev:api` instance.
+      - targets: ['host.docker.internal:4000']

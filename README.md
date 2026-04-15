@@ -225,13 +225,41 @@ featurevault/
 
 ## Self-hosting with Docker Compose
 
-```bash
-# Production deployment
-cp .env.production.example .env.production
-# Edit .env.production with your values
+FeatureVault ships with two Docker configurations: one for cloud hosting and one completely local offline monitoring stack.
 
+### 1. Production Deployment (Grafana Cloud Agent & Web/API)
+```bash
+# Provision your env keys
+cp .env.production.example .env.production
+# Edit .env.production with your DB passwords and Grafana Cloud API keys
+
+# Boot up Postgres, Redis, API, Worker, Web, and the Grafana Agent sidecar!
 docker compose -f docker-compose.prod.yml up -d
 ```
+
+### 2. Local Offline Development Observability
+If you do not want to use Grafana Cloud and instead want a 100% self-hosted, offline diagnostic suite (Prometheus, Grafana, Tempo), we have a dedicated compose isolated in `infra/o11y`.
+
+```bash
+# Make sure your API is running locally
+pnpm dev:api
+
+# Boot the local observability stack
+docker compose -f infra/o11y/docker-compose.yml up -d
+```
+
+- **Grafana Dashboard**: Open `http://localhost:3001` (Auto-logs in as Admin). Our custom FeatureVault graphs are pre-loaded immediately!
+- **Prometheus Targets**: Open `http://localhost:9090`. It auto-scrapes `host.docker.internal:4000/metrics`.
+- **Tempo OTLP API**: Traces are caught on `http://localhost:4318`.
+
+---
+
+## Observability Stack
+
+The entire system is completely mapped with the three pillars of telemetry:
+- **Metrics**: Native numeric processing using `prom-client` exposed at `GET /metrics`. Tracks websocket gauges, Redis hit-rates, and P95 fastify durations.
+- **Traces**: `@opentelemetry/sdk-node` wrapped over Fastify, PG drivers, and Redis drivers natively pushing logs over OTLP HTTP protocols (`4318`). We also emit manual computational spans tracking Aggregation execution inside `worker.ts`.
+- **Logs**: Native structured JSON mapping from `pino`, formatted via Docker tags and piped natively to Loki.
 
 ---
 
