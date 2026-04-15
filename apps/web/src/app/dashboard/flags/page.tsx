@@ -147,7 +147,7 @@ export default function FlagsPage() {
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Type</label>
             <select value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400">
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black bg-white focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400">
               <option value="boolean">Boolean</option>
               <option value="string">String</option>
               <option value="number">Number</option>

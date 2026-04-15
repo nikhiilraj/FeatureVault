@@ -117,51 +117,27 @@ export default function FlagDetailPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {data.status !== 'active' && data.status !== 'killed' && (
-              <button
-                onClick={() => statusMutation.mutate('active')}
-                style={{
-                  padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(29,158,117,0.4)',
-                  background: 'rgba(29,158,117,0.1)', color: '#1D9E75',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                }}>
+              <Button variant="secondary" size="sm" onClick={() => statusMutation.mutate('active')}>
                 Enable
-              </button>
+              </Button>
             )}
             {data.status === 'active' && (
-              <button
-                onClick={() => statusMutation.mutate('inactive')}
-                style={{
-                  padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.12)',
-                  background: 'transparent', color: '#a0a0a0',
-                  fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                }}>
+              <Button variant="secondary" size="sm" onClick={() => statusMutation.mutate('inactive')}>
                 Disable
-              </button>
+              </Button>
             )}
             {data.status === 'killed' && (
-              <button
-                onClick={() => statusMutation.mutate('inactive')}
-                style={{
-                  padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(29,158,117,0.4)',
-                  background: 'rgba(29,158,117,0.1)', color: '#1D9E75',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                }}>
+              <Button variant="secondary" size="sm" onClick={() => statusMutation.mutate('inactive')}>
                 Restore flag
-              </button>
+              </Button>
             )}
             {data.status !== 'killed' && (
-              <button
-                onClick={() => {
-                  if (confirm('Kill this flag? It immediately returns false for ALL users, overriding all rules.'))
-                    statusMutation.mutate('killed')
-                }}
-                style={{
-                  padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.4)',
-                  background: 'rgba(239,68,68,0.08)', color: '#ef4444',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                }}>
-                🚨 Kill switch
-              </button>
+              <Button variant="danger" size="sm" onClick={() => {
+                if (confirm('Kill this flag? It immediately returns false for ALL users, overriding all rules.'))
+                  statusMutation.mutate('killed')
+              }}>
+                Kill flag
+              </Button>
             )}
           </div>
         </div>
@@ -191,8 +167,8 @@ export default function FlagDetailPage() {
                 onChange={e => setDefault(e.target.value)}
                 style={{
                   width: '100%', padding: '8px 12px', borderRadius: 7,
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'rgba(255,255,255,0.04)', color: '#5DCAA5',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff', color: '#000000',
                   fontSize: 13, fontFamily: 'DM Mono, monospace', outline: 'none',
                   boxSizing: 'border-box',
                 }}
@@ -344,8 +320,8 @@ export default function FlagDetailPage() {
 
 const inputStyle: React.CSSProperties = {
   padding: '6px 10px', borderRadius: 6,
-  border: '1px solid rgba(255,255,255,0.1)',
-  background: 'rgba(255,255,255,0.04)', color: '#f0f0f0',
+  border: '1px solid #d1d5db',
+  background: '#ffffff', color: '#000000',
   fontSize: 12, outline: 'none', minWidth: 80,
 }
 
