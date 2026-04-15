@@ -7,14 +7,12 @@ const API_URL = 'http://localhost:4000/sdk/v1'
 console.log(`Starting massive simulated traffic using Key: ${API_KEY}`)
 console.log('Open Grafana (http://localhost:3001) in 15 seconds to watch it spike!\n')
 
-// 1. Simulating 15 concurrent users continuously fetching configuration (Spikes Redis Hit Ratio to 100%)
+// 1. Simulating traffic fetching configuration 
 setInterval(async () => {
-  for (let i = 0; i < 15; i++) {
-    fetch(API_URL + '/flags', { headers: { 'x-api-key': API_KEY } })
-      .then(res => res.text())
-      .catch((e) => console.error('Error fetching flags:', e.message))
-  }
-}, 300)
+  fetch(API_URL + '/flags', { headers: { 'x-api-key': API_KEY } })
+    .then(res => res.text())
+    .catch((e) => console.error('Error fetching flags:', e.message))
+}, 800)
 
 // 2. Simulating massive traffic conversions queuing natively into BullMQ 
 setInterval(async () => {
@@ -30,7 +28,7 @@ setInterval(async () => {
     headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
     body: JSON.stringify({ events })
   }).then(res => res.text()).catch((e) => console.error('Error posting events:', e.message))
-}, 100)
+}, 1500)
 
 // 3. Keep 25 Persistent webSockets open natively showing Streaming Tunnels
 const sockets = Array.from({ length: 25 }).map(() => {
@@ -49,6 +47,6 @@ setInterval(async () => {
       body: JSON.stringify({ email: 'attacker@example.com', password: 'nope' })
     }).then(res => res.text()).catch((e) => console.error('Error simulating rate limit:', e.message))
   }
-}, 500)
+}, 6000)
 
 console.log('Pumping Data... Leave this running and check Grafana!')
