@@ -19,7 +19,7 @@ declare module 'fastify' {
 }
 
 export async function authenticateSDKKey(request: FastifyRequest, reply: FastifyReply) {
-  const apiKey = request.headers['x-api-key'] as string | undefined
+  const apiKey = (request.headers['x-api-key'] || (request.query as any)?.apiKey) as string | undefined
 
   if (!apiKey) {
     sdkKeyAuthFailuresTotal.labels('missing').inc()

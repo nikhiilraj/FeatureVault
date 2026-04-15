@@ -18,8 +18,9 @@ setInterval(async () => {
 setInterval(async () => {
   // Fire off 5 randomized variant analytics events!
   const events = Array.from({ length: 5 }).map((_, i) => ({
-    eventName: 'flag_evaluation',
+    eventName: 'purchase_completed',
     userId: `sim-user-${Math.random()}`,
+    experimentKey: 'resume-demo', // Target active experiments for mathematical distribution 
     properties: { flagKey: 'demo-flag', result: true }
   }))
 
@@ -33,7 +34,7 @@ setInterval(async () => {
 // 3. Keep 25 Persistent webSockets open natively showing Streaming Tunnels
 const sockets = Array.from({ length: 25 }).map(() => {
   try {
-    return new WebSocket('ws://localhost:4000/sdk/v1/ws', { headers: { 'x-api-key': API_KEY } })
+    return new WebSocket(`ws://localhost:4000/sdk/v1/ws?apiKey=${API_KEY}`)
   } catch (e) { return null }
 })
 
